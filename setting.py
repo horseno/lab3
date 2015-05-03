@@ -16,12 +16,4 @@ localadd = {"temperature":("127.0.0.1",10002),
 devNum = 9
 cacheSize = 10  
 
-start_time = 1430675777
-start_time = 1430675953
-start_time = 1430676258
-start_time = 1430676311
-start_time = 1430676609
-start_time = 1430676663
-start_time = 1430676805
-start_time = 1430676876
-start_time = 1430677203
+
