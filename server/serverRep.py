@@ -7,13 +7,12 @@ import SimpleXMLRPCServer
 import sys
 sys.path.append("./")
 import setting
-import random
 import select
 import socket
 
 
 #class for Gateway
-class Gateway(object):
+class Gateway_Rep(object):
 	#initial class
     def __init__(self,sadd,devNum):
         self._isLeader = 0 #whether it is leader
@@ -34,7 +33,7 @@ class Gateway(object):
         self.cacheSize = setting.cacheSize
         self.cache = []
 
-        #lookup the cache to see if a client has its state in cache
+    #lookup the cache to see if a client has its state in cache
     def cache_lookup(self,id):
         for i in range(len(self.cache)):
             if self.cache[i][0] == id:
@@ -57,7 +56,7 @@ class Gateway(object):
         else:
             replace = random.randint(0,len(self.cache)-1)
             self.cache[replace] = [id,state,timestamp]
-
+        return 1
     
         
     #leader election
@@ -222,12 +221,13 @@ class Gateway(object):
     def readdb(self,id,timestmp):
         c = xmlrpclib.ServerProxy("http://"+setting.DbRepadd[0]+":"+str(setting.DbRepadd[1]))
         state = c.read_offset(id,timestmp,1)
-        self.cache_load(id,stae,timestmp)
+        self.cache_load(id,state,timestmp)
         return state
         
     #rpc interface for report state
     def report_state(self, id, state):
     	#checking invalidate id
+       
         if id >= self._n:
             print "Wrong Id"
             print "Wrong Id" + "id: "+ str(id) + "self_N: "+ str(self._n)
@@ -286,28 +286,13 @@ class Gateway(object):
         #set up connection
         c = xmlrpclib.ServerProxy(self._idlist[id][2])
         flag = 0
-        #update vector clock
-        #self.vector[self.cid] = self.vector[self.cid]+1
-        #multicast vector
-        #multicast.multicast(self.serveradd, self.vector)
+        
         #rpc call
         if c.change_state(state):
             flag = 1
         return flag
     
-    #rpc interface for register
-    def register(self,type,name,address):
-    	#register device
-        self._idlist.append([type,name,"http://"+address[0]+":"+str(address[1])])
-        #assign global id
-        self._idx[name] = self._n
-        #increase number of registed device
-        self._n =self._n + 1
-        #log
-        self.log.write(str(round(time.time()+self._timeoffset-setting.start_time,2))+','+name+','+str(self._n - 1)+'\n')
-        print str(round(time.time()+self._timeoffset-setting.start_time,2))+','+name+','+str(self._n - 1)+'\n'
-        #return global id
-        return self._n - 1
+   
 
 
     #receiving register information from the master server
@@ -361,7 +346,7 @@ def readTest(filename,col):
 timel,action = readTest('test-input.csv',5)
 
 devNum = setting.devNum 
-server = Gateway(setting.serveradd,devNum)
+server = Gateway_Rep(setting.serveradd,devNum)
 #server.leader_elect()
 #server.time_syn()
 listen_thread = myserver(server)

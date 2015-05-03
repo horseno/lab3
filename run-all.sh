@@ -9,11 +9,13 @@ python setting.py &
 
 python client/smartDev.py & 
 python client/sensor.py &
+python server/database.py &
+python server/DB.py &
+python server/DB_rep.py &
 
 python server/server.py &
 python server/serverRep.py &
 
-python server/database.py &
 python client/bulb.py &
 python client/temperature.py &
 python client/outlet.py &

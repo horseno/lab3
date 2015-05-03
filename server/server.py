@@ -7,8 +7,6 @@ import SimpleXMLRPCServer
 import sys
 sys.path.append("./")
 import setting
-import random
-
 import select
 import socket
 
@@ -57,6 +55,7 @@ class Gateway(object):
         else:
             replace = random.randint(0,len(self.cache)-1)
             self.cache[replace] = [id,state,timestamp]
+        return 1
 
     
     #leader election
@@ -228,13 +227,13 @@ class Gateway(object):
     def readdb(self,id,timestmp):
         c = xmlrpclib.ServerProxy("http://"+setting.Dbadd[0]+":"+str(setting.Dbadd[1]))
         state = c.read_offset(id,timestmp,1)
-        self.cache_load(id,stae,timestmp)
+        self.cache_load(id,state,timestmp)
         return state
         
     #rpc interface for report state
     def report_state(self, id, state):
     	#checking invalidate id
-        print "**********"
+        
         if id >= self._n:
             print "Wrong Id" + "id: "+ str(id) + "self_N: "+ str(self._n)
             return -1

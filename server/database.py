@@ -159,10 +159,3 @@ class Database:
         else:
             return 0
  
-
-def main():
-    DB = Database(setting.Dbadd,0)
-    DB_rep =Database(setting.DbRepadd,1)
-
-if __name__ == "__main__":
-    main()
