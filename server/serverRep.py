@@ -7,7 +7,7 @@ import SimpleXMLRPCServer
 import sys
 sys.path.append("./")
 import setting
-
+import random
 import select
 import socket
 
@@ -23,13 +23,42 @@ class Gateway(object):
         self._idlist = [["gateway","gateway",sadd,0]]#list for registered devices
         self._mode = "HOME"
         self.serveradd = sadd #server address
+        self.Dbadd = setting.DbRepadd
         self._idx = {"gatewat":0} #index for global id
         self.lasttime = -1 #last time the motion sensor was on
         self.log = open("results/serverRep_log.txt",'w+') #server log file
 
-        self._idlist,append(["gateway","replica",settings.replicaadd,1])
+        self._idlist.append(["gateway","replica",setting.replicaadd,1])
         self._idx = {"replica":1} #index for global id
-        self.replicaadd = settings.replicaadd
+        self.replicaadd = setting.replicaadd
+        self.cacheSize = setting.cacheSize
+        self.cache = []
+
+        #lookup the cache to see if a client has its state in cache
+    def cache_lookup(self,id):
+        for i in range(len(self.cache)):
+            if self.cache[i][0] == id:
+                return i
+        #cache miss
+        return -1
+    #update the cache if the state of a client changes
+    def cache_update(self,id,state,timestamp):
+        index = self.cache_lookup(id)
+        if index >0:
+            self.cache[index] = [id,state,timestamp]
+            return 1
+        else:
+            return -1
+
+    #load data into cache after read from the database. If cache is full, replace using random replacement strategy.
+    def cache_load(self,id, state, timestamp): 
+        if len(self.cache)<self.cacheSize:
+            self.cache.append([id,state,timestamp])
+        else:
+            replace = random.randint(0,len(self.cache)-1)
+            self.cache[replace] = [id,state,timestamp]
+
+    
         
     #leader election
     def leader_elect(self):
@@ -140,19 +169,17 @@ class Gateway(object):
     	# checking invalidate id
         if id >= self._n:
             print "Wrong Id"
+            print "Wrong Id" + "id: "+ str(id) + "self_N: "+ str(self._n)
             return -1
         #set up connection
         c = xmlrpclib.ServerProxy(self._idlist[id][2])
-        #update vector clock
-        #self.vector[self.cid] = self.vector[self.cid]+1
-        #multicast update
-        #multicast.multicast(self.serveradd, self.vector)
+
         #rpc call
         state = c.query_state()
         #get timestamp
         timestmp = round(time.time()+self._timeoffset-setting.start_time,2)
         t1 = time.time()
-        self.writedb(id,state,timestmp,self.vector)
+        self.writedb(id,state,timestmp)
         print "writedb takes",time.time()-t1
         #log
         self.log.write(str(round(time.time()+self._timeoffset-setting.start_time,2))+','+self._idlist[id][1]+','+state+'\n')
@@ -177,15 +204,25 @@ class Gateway(object):
         return state
     
     #write to db
-    def writedb(self,id,state,timestmp,vector):
-        c = xmlrpclib.ServerProxy("http://"+setting.Dbadd[0]+":"+str(setting.Dbadd[1]))
-        c.write(id,state,timestmp,vector)
+    def writedb(self,id,state,timestmp):
+        self.writedb_local(id,state,timestmp)
+
+        #remote write on the master server 
+        rc = xmlrpclib.ServerProxy("http://"+self.serveradd[0]+":"+str(self.serveradd[1]))
+        rc.writedb_local(id,state,timestmp)
+        self.cache_update(id,state,timestmp)
         return 1
-    
+
+    def writedb_local(self,id,state,timestmp):
+        c = xmlrpclib.ServerProxy("http://"+self.Dbadd[0]+":"+str(self.Dbadd[1]))
+        c.write(id,state,timestmp)
+        return 1
+
     #read from db    
     def readdb(self,id,timestmp):
-        c = xmlrpclib.ServerProxy("http://"+setting.Dbadd[0]+":"+str(setting.Dbadd[1]))
+        c = xmlrpclib.ServerProxy("http://"+setting.DbRepadd[0]+":"+str(setting.DbRepadd[1]))
         state = c.read_offset(id,timestmp,1)
+        self.cache_load(id,stae,timestmp)
         return state
         
     #rpc interface for report state
@@ -193,11 +230,12 @@ class Gateway(object):
     	#checking invalidate id
         if id >= self._n:
             print "Wrong Id"
+            print "Wrong Id" + "id: "+ str(id) + "self_N: "+ str(self._n)
             return -1
         #get timestamp
         timestmp = round(time.time()+self._timeoffset-setting.start_time,2)
         t1 =time.time()
-        self.writedb(id,state,timestmp,self.vector)
+        self.writedb(id,state,timestmp)
         print "writedb takes",time.time()-t1
         #log
         self.log.write(str(round(time.time()-setting.start_time,2))+','+self._idlist[id][1]+','+state+'\n')
@@ -243,6 +281,7 @@ class Gateway(object):
     	#checking invalidate id
         if id >= self._n:
             print "Wrong Id"
+            print "Wrong Id" + "id: "+ str(id) + "self_N: "+ str(self._n)
             return -1
         #set up connection
         c = xmlrpclib.ServerProxy(self._idlist[id][2])
@@ -269,13 +308,13 @@ class Gateway(object):
         print str(round(time.time()+self._timeoffset-setting.start_time,2))+','+name+','+str(self._n - 1)+'\n'
         #return global id
         return self._n - 1
+
+
     #receiving register information from the master server
-    def recieve_register_info(self,cid,type,name,address):
+    def recieve_register_info(self,cid,type,name,address,n):
         self._idlist.append([type,name,"http://"+address[0]+":"+str(address[1])])
         self._idx[name] = cid
-
-
-
+        self._n =n 
         return 1
 
     
@@ -323,8 +362,8 @@ timel,action = readTest('test-input.csv',5)
 
 devNum = setting.devNum 
 server = Gateway(setting.serveradd,devNum)
-server.leader_elect()
-server.time_syn()
+#server.leader_elect()
+#server.time_syn()
 listen_thread = myserver(server)
 listen_thread.start()
 

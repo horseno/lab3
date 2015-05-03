@@ -11,9 +11,12 @@ def compare_float(f1, f2):
 
 class Database:
     '''Backend Database'''
-    def __init__(self,Dbadd):
+    def __init__(self,Dbadd,IFRep):
         #store current state and history state in separate files
-        self.fname = "results/dbfile.csv"
+        if IFRep == 0:
+            self.fname = "results/dbfile.csv"
+        else:
+            self.fname = "results/dbfile_rep.csv"
         f = open(self.fname,"w+")
         f.close()
         self._isLeader = 0 #whether it is leader
@@ -29,10 +32,10 @@ class Database:
             string[i]= int(string[i])
         return string 
 
-    def write(self, cid, state, timestamp,vector):
+    def write(self, cid, state, timestamp):
         with open(self.fname, 'ab') as f:
             curWriter = csv.writer(f)
-            curWriter.writerow([cid,state,timestamp,vector])
+            curWriter.writerow([cid,state,timestamp])
         return 1
     
     def leader_elect(self):
@@ -158,7 +161,8 @@ class Database:
  
 
 def main():
-    DB = Database(setting.Dbadd)
+    DB = Database(setting.Dbadd,0)
+    DB_rep =Database(setting.DbRepadd,1)
 
 if __name__ == "__main__":
     main()

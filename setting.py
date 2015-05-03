@@ -1,6 +1,7 @@
 serveradd = ("127.0.0.1",10000)
 replicaadd = ("127.0.0.1",11000)
 Dbadd = ("127.0.0.1",10001)
+DbRepadd = ("127.0.0.1",11001)
 synport = 16000
 eleport = 17000
 
@@ -12,9 +13,11 @@ localadd = {"temperature":("127.0.0.1",10002),
             "door":("127.0.0.1",10007),
             "beacon":("127.0.0.1",10008)}
            
-devNum = 8
+devNum = 9
 cacheSize = 10  
 
-start_time = 1428642946
-start_time = 1428643427
-start_time = 1428643522
+start_time = 1430667164
+start_time = 1430667333
+start_time = 1430667425
+start_time = 1430667511
+start_time = 1430667708

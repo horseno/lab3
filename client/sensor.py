@@ -130,7 +130,7 @@ class Sensor:
 
     def report_to_server(self):
         '''Push to the server'''
-
+        print "############"
         self.c.report_state(self.cid, self.state)
         return 1
 

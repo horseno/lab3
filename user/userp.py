@@ -22,7 +22,7 @@ class UserProcess(object):
         self._gid = -1 #global id 
         self._localadd = localadd
         self.log=open("results/user_output.txt",'w+') #output file
-        self.vector = [0]* devNum #vector clock
+        
     
     def leader_elect(self):
         time.sleep(1+random.random())  #wait for server setting up
@@ -121,14 +121,7 @@ class UserProcess(object):
         self._mode = self.c.change_mode(mode)
         return 1
 
-    def update_vector_clock(self,vector):
-        for i in range(len(vector)):
-            if vector[i] > self.vector[i]:
-                self.vector[i] = vector[i]
 
-        self.vector[self._gid] = self.vector[self._gid]+1
-
-        return 1
 
 #thread for listening   			
 class user(threading.Thread):
@@ -155,8 +148,8 @@ timel,action = readTest('test-input.csv',6)
 devNum = setting.devNum
 myuser = UserProcess(setting.localadd["user"],devNum)
 
-myuser.leader_elect()
-myuser.time_syn()
+#myuser.leader_elect()
+#myuser.time_syn()
 listen_thread = user(myuser)
 listen_thread.start()
 
