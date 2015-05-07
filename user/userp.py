@@ -13,7 +13,7 @@ import random
 #class for user process
 class UserProcess(object):
 	#initial
-    def __init__(self,localadd,devNum):
+    def __init__(self,localadd):
         self._isLeader = 0 #whether it is leader
         self._electID = random.random() #id for election
         self._timeoffset = 0 #synchronized time offset
@@ -42,7 +42,12 @@ class UserProcess(object):
     def text_message(self,msg):
         self.log.write(msg+'\n')
         return 1
-
+        
+    def change_server(self,new_server_add):
+        self.c = xmlrpclib.ServerProxy("http://"+new_server_add[0]+":"+str(new_server_add[1]))
+        print "User change to new server","http://"+new_server_add[0]+":"+str(new_server_add[1])
+        return 1
+        
     #rpc call for change mode 
     def change_mode(self,mode):
         self.c.change_mode(mode)
@@ -72,12 +77,9 @@ def readTest(filename,col):
                 action.append(row[col])     
             return time, action    
         
-timel,action = readTest('test-input.csv',6)
-devNum = setting.devNum
-myuser = UserProcess(setting.localadd["user"],devNum)
+timel,action = readTest(setting.testcase,7)
+myuser = UserProcess(setting.localadd["user"])
 
-#myuser.leader_elect()
-#myuser.time_syn()
 listen_thread = user(myuser)
 listen_thread.start()
 

@@ -11,11 +11,8 @@ import random
 
 class Sensor:
     ''' Represents any senors'''
-    def __init__(self,name,serveradd,localadd,devNum):
+    def __init__(self,name,serveradd,localadd):
         '''initialize a sensor, create a client to connect to server'''
-        self._isLeader = 0 #whether it is leader
-        self._timeoffset = 0 #synchronized time offset
-        self._electID = random.random()  #id for election
         self.name = name
         self.ctype = 'sensor'
         self.localadd = localadd
@@ -38,7 +35,13 @@ class Sensor:
         self.s = SimpleXMLRPCServer.SimpleXMLRPCServer(self.localadd,logRequests=False)#zerorpc.Server(self)
         self.s.register_instance(self)
         self.s.serve_forever()
-
+    
+    def change_server(self, new_server_add):
+        
+        self.c = xmlrpclib.ServerProxy("http://"+new_server_add[0]+":"+str(new_server_add[1]))
+        print self.name,"change to new server","http://"+new_server_add[0]+":"+str(new_server_add[1])
+        return 1
+    
     def query_state(self):
         
         return self.state
@@ -58,7 +61,6 @@ class Sensor:
 
     def report_to_server(self):
         '''Push to the server'''
-        
         self.c.report_state(self.cid, self.state)
         return 1
 

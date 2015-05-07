@@ -10,7 +10,6 @@ import setting
 #get ip information from setting file 
 serveradd = setting.serveradd
 localadd = setting.localadd[os.path.basename(__file__).split('.',1)[0]]
-devNum = setting.devNum
 
 class temperature (threading.Thread):
     def __init__(self,client):
@@ -29,7 +28,7 @@ def main():
         waitT = setting.start_time - current_time
         time.sleep(waitT)
 
-    temp = smartDev.SmartDev("bulb",serveradd,localadd,devNum)
+    temp = smartDev.SmartDev("bulb",serveradd,localadd)
     
     # create a thread to listen, deal with server pulls
     #temp.leader_elect()

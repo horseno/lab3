@@ -1,6 +1,6 @@
 # get current time, set universal start time to be five seconds later 
 timestamp=$(date +%s)
-start_time=$((timestamp + 5))
+start_time=$((timestamp + 3))
 printf "start_time = %s\n" $start_time >> setting.py
 
 

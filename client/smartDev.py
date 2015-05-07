@@ -11,16 +11,12 @@ import random
 
 class SmartDev:
     ''' Represents any smart device'''
-    def __init__(self,name,serveradd,localadd,devNum):
-        self._isLeader = 0 #whether it is leader
-        self._timeoffset = 0 #synchronized time offset
+    def __init__(self,name,serveradd,localadd):
         self.name = name
-        self._electID = random.random() #id for election
         self.ctype = 'device'
         self.localadd = localadd
         self.c0 = xmlrpclib.ServerProxy("http://"+serveradd[0]+":"+str(serveradd[1]),verbose=0)#rpc server
         self.state = '1'
-        self.vector = [0] * devNum #vector clock
         filename = "results/devout-" + self.name + '.txt' 
         f = open(filename,"w+")
         f.close()
@@ -45,7 +41,12 @@ class SmartDev:
     def query_state(self):
         
         return self.state
-
+    
+    def change_server(self,new_server_add):
+        self.c = xmlrpclib.ServerProxy("http://"+new_server_add[0]+":"+str(new_server_add[1]))
+        print self.name,"change to new server","http://"+new_server_add[0]+":"+str(new_server_add[1])
+        return 1
+        
     def set_state(self,state):
         '''function used to debug and test'''
         self.state = state
@@ -54,7 +55,7 @@ class SmartDev:
     def change_state(self, state):
         '''change state according to the request of the gateway, write change to file'''
         self.state = state
-        cur_t = time.time()+self._timeoffset 
+        cur_t = time.time() 
         timestamp = round(cur_t - setting.start_time, 2)
         filename = "results/devout-" + self.name + '.txt' 
         content = str(timestamp) + ',' + str(self.state)+ '\n'

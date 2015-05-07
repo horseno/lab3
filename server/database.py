@@ -19,8 +19,6 @@ class Database:
             self.fname = "results/dbfile_rep.csv"
         f = open(self.fname,"w+")
         f.close()
-        self._isLeader = 0 #whether it is leader
-        self._electID = 0 #id for election
         
         self.s = SimpleXMLRPCServer.SimpleXMLRPCServer(Dbadd,logRequests=False)#rpc server
         self.s.register_instance(self)

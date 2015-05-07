@@ -10,7 +10,7 @@ import setting
 #get ip information from setting file 
 serveradd = setting.serveradd
 localadd = setting.localadd[os.path.basename(__file__).split('.',1)[0]]
-devNum = setting.devNum
+
 class temperature (threading.Thread):
     def __init__(self,client):
         threading.Thread.__init__(self)
@@ -44,7 +44,7 @@ def main():
         temp.register_to_server()
         time.sleep(float(timel[1])+float(setting.start_time) - time.time())
         for index in range(1,len(timel)-1):
-            temp.set_state_push(action[index])
+            temp.set_state(action[index])
             #calculate time remained before next point in the timeline
             waitTime = float(timel[index+1])+float(setting.start_time) - time.time()
             if waitTime>0:
@@ -58,16 +58,14 @@ def main():
         waitT = setting.start_time - current_time
         time.sleep(waitT)
 
-    temp = sensor.Sensor("beacon",serveradd,localadd,devNum)
+    temp = sensor.Sensor("beacon",serveradd,localadd)
     
     # create a thread to listen, deal with server pulls
-    #temp.leader_elect()
-    #temp.time_syn()
     listen_thread = temperature(temp)
     listen_thread.start()
     
     
-    timel,action= readTest('test-input.csv',4)
+    timel,action= readTest(setting.testcase,4)
 
     start_sync()
     interaction(temp,timel,action)  
